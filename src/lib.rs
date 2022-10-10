@@ -42,6 +42,9 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
+use jni::sys::jbyteArray;
+use jni::objects::JClass;
+use jni::JNIEnv;
 
 pub use crate::colors::AlphaOptim;
 pub use crate::deflate::Deflaters;
@@ -443,6 +446,29 @@ pub fn optimize(input: &InFile, output: &OutFile, opts: &Options) -> PngResult<(
         }
     }
     Ok(())
+}
+
+#[no_mangle]
+#[allow(non_snake_case)]
+pub extern "system" fn Java_com_textalk_image_OxiPNG_optimize_1from_1memory(env: JNIEnv, _class: JClass, a: jbyteArray) -> jbyteArray {
+    let converted : &[u8] = &JNIEnv::convert_byte_array(&env, a).unwrap();
+
+    let mut opts: Options = Default::default();
+    opts.interlace = Some(0);
+    opts.fix_errors = true;
+    opts.strip = Headers::Safe;
+    let mut filter = IndexSet::new();
+    filter.insert(0);
+    filter.insert(1);
+    filter.insert(2);
+    filter.insert(3);
+    filter.insert(4);
+    filter.insert(5);
+    opts.filter = filter;
+
+    let result = optimize_from_memory(converted, &opts);
+
+    return JNIEnv::byte_array_from_slice(&env, &result.unwrap()).unwrap();
 }
 
 /// Perform optimization on the input file using the options provided, where the file is already

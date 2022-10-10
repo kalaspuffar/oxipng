@@ -69,6 +69,7 @@ default = ["binary", "filetime", "parallel", "libdeflater", "zopfli"]
 parallel = ["rayon", "indexmap/rayon"]
 
 [lib]
+crate-type = ["cdylib"]
 name = "oxipng"
 path = "src/lib.rs"
 
